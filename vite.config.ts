@@ -1,9 +1,10 @@
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { defineConfig, loadEnv, type PluginOption } from "vite";
+import { loadEnv, type PluginOption } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { translate, correct, fetchMeme, HttpError } from "./api/_core.js";
+import { translate, correct, makeMeme, HttpError } from "./api/_core.js";
 
 interface RequestBody {
   text?: string;
@@ -16,7 +17,7 @@ type RouteHandler = (body: RequestBody) => Promise<Record<string, unknown>>;
 const routes: Record<string, RouteHandler> = {
   "/api/translate": async (body) => ({ translation: await translate(body.text, body.targetLang) }),
   "/api/correct": async (body) => ({ corrected: await correct(body.text) }),
-  "/api/meme": async () => ({ meme: await fetchMeme() }),
+  "/api/meme": async (body) => ({ ...(await makeMeme(body.text)) }),
 };
 
 function devApiPlugin(env: Record<string, string>): PluginOption {
@@ -94,6 +95,11 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(process.cwd(), "src"),
       },
+    },
+    test: {
+      environment: "jsdom",
+      setupFiles: ["./src/test/setup.ts"],
+      include: ["src/**/*.test.{ts,tsx}", "api/**/*.test.ts", "shared/**/*.test.ts"],
     },
   };
 });
