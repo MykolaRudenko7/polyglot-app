@@ -6,8 +6,8 @@ import tailwindcss from "@tailwindcss/vite";
 import { translate, HttpError } from "./api/_core";
 
 function devApiPlugin(env: Record<string, string>): PluginOption {
-  process.env.OPENROUTER_API_KEY = env.OPENROUTER_API_KEY;
-  process.env.OPENROUTER_MODEL = env.OPENROUTER_MODEL;
+  if (env.OPENROUTER_API_KEY) process.env.OPENROUTER_API_KEY = env.OPENROUTER_API_KEY;
+  if (env.OPENROUTER_MODEL) process.env.OPENROUTER_MODEL = env.OPENROUTER_MODEL;
 
   return {
     name: "dev-api-translate",
