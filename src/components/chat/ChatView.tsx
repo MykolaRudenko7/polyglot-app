@@ -47,7 +47,6 @@ export function ChatView() {
           setText(suggestion ?? "");
         }}
         onSend={handleSend}
-        disabled={false}
       />
       <LanguageBar lang={lang} onSelect={setLang} disabledCode={detectedCode} />
     </div>
