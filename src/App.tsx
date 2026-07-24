@@ -3,23 +3,45 @@ import { Header } from "@/components/Header";
 import { TranslatorForm } from "@/components/TranslatorForm";
 import { ResultView } from "@/components/ResultView";
 import { useTranslate } from "@/hooks/useTranslate";
+import { detectLanguageCode } from "@/lib/detectLanguage";
+import { LANGUAGES } from "../shared/languages";
 
 type Screen = "form" | "result";
 
+const DEFAULT_LANG = LANGUAGES[0].code;
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("form");
-  const [originalText, setOriginalText] = useState("");
+  const [text, setText] = useState("");
+  const [lang, setLang] = useState(DEFAULT_LANG);
   const { status, translation, error, run, reset } = useTranslate();
 
-  function handleTranslate(text: string, targetLang: string) {
-    setOriginalText(text);
+  const detectedCode = detectLanguageCode(text);
+
+  function handleTextChange(value: string) {
+    setText(value);
+    const detected = detectLanguageCode(value);
+    if (detected && detected === lang) {
+      const fallback = LANGUAGES.find((language) => language.code !== detected);
+      if (fallback) setLang(fallback.code);
+    }
+  }
+
+  function handleTranslate() {
+    if (!text.trim()) return;
     setScreen("result");
-    void run(text, targetLang);
+    void run(text, lang);
+  }
+
+  function handleTryAgain() {
+    reset();
+    setScreen("form");
   }
 
   function handleStartOver() {
     reset();
-    setOriginalText("");
+    setText("");
+    setLang(DEFAULT_LANG);
     setScreen("form");
   }
 
@@ -29,14 +51,23 @@ export default function App() {
         <Header />
         <div className="px-5 pt-6 pb-8 sm:px-6">
           {screen === "form" ? (
-            <TranslatorForm loading={status === "loading"} onTranslate={handleTranslate} />
+            <TranslatorForm
+              text={text}
+              onTextChange={handleTextChange}
+              lang={lang}
+              onLangChange={setLang}
+              disabledCode={detectedCode}
+              loading={status === "loading"}
+              onSubmit={handleTranslate}
+            />
           ) : (
             <ResultView
-              originalText={originalText}
+              originalText={text}
               translation={translation}
               loading={status === "loading"}
               error={status === "error" ? error : ""}
               onStartOver={handleStartOver}
+              onTryAgain={handleTryAgain}
             />
           )}
         </div>

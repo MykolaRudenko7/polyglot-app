@@ -9,6 +9,7 @@ interface ResultViewProps {
   loading: boolean;
   error: string;
   onStartOver: () => void;
+  onTryAgain: () => void;
 }
 
 export function ResultView({
@@ -17,6 +18,7 @@ export function ResultView({
   loading,
   error,
   onStartOver,
+  onTryAgain,
 }: ResultViewProps) {
   return (
     <div className="flex flex-col gap-3.5">
@@ -44,12 +46,22 @@ export function ResultView({
         </p>
       )}
 
-      <Button
-        onClick={onStartOver}
-        className="bg-blue hover:bg-blue/90 mt-1 h-[50px] w-full rounded-md text-2xl font-bold text-white"
-      >
-        Start Over
-      </Button>
+      {error ? (
+        <Button
+          onClick={onTryAgain}
+          className="bg-blue hover:bg-blue/90 mt-1 h-[50px] w-full rounded-md text-2xl font-bold text-white"
+        >
+          Try Again
+        </Button>
+      ) : (
+        <Button
+          onClick={onStartOver}
+          disabled={loading}
+          className="bg-blue hover:bg-blue/90 mt-1 h-[50px] w-full rounded-md text-2xl font-bold text-white"
+        >
+          Start Over
+        </Button>
+      )}
     </div>
   );
 }
