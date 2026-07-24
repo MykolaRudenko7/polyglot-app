@@ -7,7 +7,6 @@ interface ChatInputProps {
   suggestion: string | null;
   onApplySuggestion: () => void;
   onSend: () => void;
-  disabled: boolean;
 }
 
 export function ChatInput({
@@ -16,7 +15,6 @@ export function ChatInput({
   suggestion,
   onApplySuggestion,
   onSend,
-  disabled,
 }: ChatInputProps) {
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -53,7 +51,7 @@ export function ChatInput({
         <button
           type="button"
           onClick={onSend}
-          disabled={disabled || !text.trim()}
+          disabled={!text.trim()}
           aria-label="Send"
           className="bg-brand-green grid size-9 shrink-0 place-content-center rounded-full text-white transition hover:brightness-105 disabled:opacity-40"
         >

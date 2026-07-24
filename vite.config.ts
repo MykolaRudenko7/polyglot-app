@@ -70,8 +70,8 @@ function readJson(req: IncomingMessage): Promise<RequestBody> {
           targetLang: asString(record.targetLang),
           prompt: asString(record.prompt),
         });
-      } catch (err) {
-        reject(err instanceof Error ? err : new Error("Invalid JSON"));
+      } catch {
+        reject(new HttpError(400, "Invalid JSON body."));
       }
     });
     req.on("error", reject);
