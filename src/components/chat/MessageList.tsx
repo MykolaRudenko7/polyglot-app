@@ -4,7 +4,7 @@ import type { ChatMessage } from "@/hooks/useChat";
 
 interface MessageListProps {
   messages: ChatMessage[];
-  onIllustrate: (id: string) => void;
+  onIllustrate: (id: string, text: string) => void;
 }
 
 export function MessageList({ messages, onIllustrate }: MessageListProps) {

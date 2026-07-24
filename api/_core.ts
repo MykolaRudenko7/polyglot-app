@@ -149,6 +149,62 @@ export async function correct(text: string | undefined): Promise<string> {
   return data.choices?.[0]?.message?.content?.trim() ?? trimmed;
 }
 
+const MEME_TEMPLATES: Record<string, string> = {
+  drake: "https://i.imgflip.com/30b1gx.jpg",
+  "distracted-boyfriend": "https://i.imgflip.com/1ur9b0.jpg",
+  "two-buttons": "https://i.imgflip.com/1g8my4.jpg",
+  "change-my-mind": "https://i.imgflip.com/24y43o.jpg",
+  "expanding-brain": "https://i.imgflip.com/1jwhww.jpg",
+  "woman-yelling-at-cat": "https://i.imgflip.com/345v97.jpg",
+  "surprised-pikachu": "https://i.imgflip.com/2kbn1e.jpg",
+  "this-is-fine": "https://i.imgflip.com/wxica.jpg",
+};
+
+export interface MemeCard {
+  imageUrl: string;
+  topText?: string;
+  bottomText?: string;
+}
+
+export async function makeMeme(text: string | undefined): Promise<MemeCard> {
+  const trimmed = typeof text === "string" ? text.trim() : "";
+  if (!trimmed) return { imageUrl: await fetchMeme() };
+
+  try {
+    const keys = Object.keys(MEME_TEMPLATES).join(", ");
+    const chain = modelChain();
+    const data = await callOpenRouter({
+      model: chain[0],
+      models: chain,
+      temperature: 0.7,
+      max_tokens: 150,
+      messages: [
+        {
+          role: "system",
+          content:
+            `You caption memes. Given a phrase, pick the best-fitting template from: ${keys}. ` +
+            'Reply with ONLY compact JSON: {"template":"<key>","top":"<caption>","bottom":"<caption>"}. ' +
+            "Captions must relate to the phrase, be funny and friendly, at most 8 words each, " +
+            "and use the same language as the phrase.",
+        },
+        { role: "user", content: trimmed },
+      ],
+    });
+
+    const raw = data.choices?.[0]?.message?.content ?? "";
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (match) {
+      const parsed = JSON.parse(match[0]) as { template?: string; top?: string; bottom?: string };
+      const imageUrl = parsed.template ? MEME_TEMPLATES[parsed.template] : undefined;
+      if (imageUrl) return { imageUrl, topText: parsed.top, bottomText: parsed.bottom };
+    }
+  } catch (err) {
+    console.error("Meme captioning failed, falling back to a random meme", err);
+  }
+
+  return { imageUrl: await fetchMeme() };
+}
+
 export async function fetchMeme(): Promise<string> {
   let response: Response;
   try {

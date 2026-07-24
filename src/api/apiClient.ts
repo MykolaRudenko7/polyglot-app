@@ -41,7 +41,12 @@ export async function requestCorrection(text: string): Promise<string> {
   return corrected;
 }
 
-export async function requestMeme(): Promise<string> {
-  const { meme } = await postJson<{ meme: string }>("/api/meme", {});
-  return meme;
+export interface MemeCard {
+  imageUrl: string;
+  topText?: string;
+  bottomText?: string;
+}
+
+export async function requestMeme(text: string): Promise<MemeCard> {
+  return postJson<MemeCard>("/api/meme", { text });
 }

@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { requestMeme, requestTranslation } from "@/api/apiClient";
+import { requestMeme, requestTranslation, type MemeCard } from "@/api/apiClient";
 
 export interface ChatMessage {
   id: string;
   role: "system" | "user" | "bot";
   text?: string;
   status?: "loading" | "error";
-  imageUrl?: string;
-  imageStatus?: "loading" | "error";
-  imageError?: string;
+  meme?: MemeCard;
+  memeStatus?: "loading" | "error";
+  memeError?: string;
 }
 
 const GREETING: ChatMessage = {
@@ -48,15 +48,15 @@ export function useChat() {
     }
   }
 
-  async function addMeme(botId: string): Promise<void> {
-    patch(botId, { imageStatus: "loading", imageError: undefined });
+  async function addMeme(botId: string, text: string): Promise<void> {
+    patch(botId, { memeStatus: "loading", memeError: undefined });
     try {
-      const imageUrl = await requestMeme();
-      patch(botId, { imageUrl, imageStatus: undefined });
+      const meme = await requestMeme(text);
+      patch(botId, { meme, memeStatus: undefined });
     } catch (err) {
       patch(botId, {
-        imageStatus: "error",
-        imageError: err instanceof Error ? err.message : "Meme fetch failed.",
+        memeStatus: "error",
+        memeError: err instanceof Error ? err.message : "Meme fetch failed.",
       });
     }
   }

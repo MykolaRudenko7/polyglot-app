@@ -35,8 +35,8 @@ export function ChatView() {
     <div className="flex min-h-0 flex-1 flex-col">
       <MessageList
         messages={messages}
-        onIllustrate={(id) => {
-          void addMeme(id);
+        onIllustrate={(id, text) => {
+          void addMeme(id, text);
         }}
       />
       <ChatInput
