@@ -28,8 +28,14 @@ export async function handlePost(
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
   }
+  let body: Record<string, unknown>;
   try {
-    const result = await fn(parseBody(req.body));
+    body = parseBody(req.body);
+  } catch {
+    return res.status(400).json({ error: "Invalid JSON body." });
+  }
+  try {
+    const result = await fn(body);
     return res.status(200).json(result);
   } catch (err) {
     if (err instanceof HttpError) return res.status(err.status).json({ error: err.message });
