@@ -8,6 +8,8 @@ export const LANGUAGES: readonly Language[] = [
   { code: "fr", name: "French", flag: "🇫🇷" },
   { code: "es", name: "Spanish", flag: "🇪🇸" },
   { code: "ja", name: "Japanese", flag: "🇯🇵" },
+  { code: "uk", name: "Ukrainian", flag: "🇺🇦" },
+  { code: "en", name: "English", flag: "🇬🇧" },
 ];
 
 export const LANGUAGE_NAMES: Record<string, string> = Object.fromEntries(
