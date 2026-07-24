@@ -1,7 +1,10 @@
 import { LANGUAGE_NAMES } from "../shared/languages.js";
 
-const TRANSLATE_MODEL = "google/gemma-4-31b-it:free";
-const CORRECT_MODEL = "google/gemma-4-31b-it:free";
+const FREE_MODELS = [
+  "google/gemma-4-31b-it:free",
+  "google/gemma-4-26b-a4b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+];
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const MEME_API = "https://meme-api.com/gimme/6";
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -42,6 +45,12 @@ function requireApiKey(): string {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new HttpError(500, "Server is missing OPENROUTER_API_KEY.");
   return apiKey;
+}
+
+function modelChain(): string[] {
+  const override = process.env.OPENROUTER_MODEL;
+  if (!override) return [...FREE_MODELS];
+  return [override, ...FREE_MODELS.filter((model) => model !== override)];
 }
 
 async function callOpenRouter(body: Record<string, unknown>): Promise<ChatCompletion> {
@@ -99,8 +108,10 @@ export async function translate(
     { role: "user", content: trimmed },
   ];
 
+  const chain = modelChain();
   const data = await callOpenRouter({
-    model: TRANSLATE_MODEL,
+    model: chain[0],
+    models: chain,
     temperature: 0.2,
     max_tokens: 500,
     messages,
@@ -126,8 +137,10 @@ export async function correct(text: string | undefined): Promise<string> {
     { role: "user", content: trimmed },
   ];
 
+  const chain = modelChain();
   const data = await callOpenRouter({
-    model: CORRECT_MODEL,
+    model: chain[0],
+    models: chain,
     temperature: 0,
     max_tokens: 300,
     messages,
