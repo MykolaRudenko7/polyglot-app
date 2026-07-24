@@ -9,7 +9,7 @@ interface LanguageBarProps {
 
 export function LanguageBar({ lang, onSelect, disabledCode }: LanguageBarProps) {
   return (
-    <div className="flex items-center justify-center gap-2 border-t border-[#eee] px-3 py-2.5">
+    <div className="flex items-center justify-center gap-2 border-t border-[#eee] px-3 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
       {LANGUAGES.map(({ code, name, flag }) => {
         const active = code === lang;
         const disabled = code === disabledCode;
