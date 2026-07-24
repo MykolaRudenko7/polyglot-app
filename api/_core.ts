@@ -1,4 +1,4 @@
-import { LANGUAGE_NAMES } from "../shared/languages";
+import { LANGUAGE_NAMES } from "../shared/languages.js";
 
 const DEFAULT_MODEL = "openai/gpt-oss-20b:free";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -67,7 +67,8 @@ export async function translate(
       }),
     });
   } catch (err) {
-    if (err instanceof DOMException && err.name === "TimeoutError") {
+    const name = err instanceof Error ? err.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
       throw new HttpError(504, "The translation service timed out. Please try again.");
     }
     throw new HttpError(502, "Could not reach the translation service. Check your connection.");
