@@ -1,6 +1,6 @@
 import { LANGUAGE_NAMES } from "../shared/languages";
 
-const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
+const DEFAULT_MODEL = "openai/gpt-oss-20b:free";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const REQUEST_TIMEOUT_MS = 20_000;
 
