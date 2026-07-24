@@ -4,7 +4,35 @@ import { loadEnv, type PluginOption } from "vite";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 import { translate, correct, makeMeme, HttpError } from "./api/_core.js";
+
+const pwaPlugin = VitePWA({
+  registerType: "autoUpdate",
+  includeAssets: ["apple-touch-icon.png"],
+  manifest: {
+    name: "PollyGlot",
+    short_name: "PollyGlot",
+    description: "Perfect Translation Every Time",
+    theme_color: "#0d182e",
+    background_color: "#f4f4f6",
+    display: "standalone",
+    icons: [
+      { src: "/pwa-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/pwa-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/pwa-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  },
+  workbox: {
+    navigateFallbackDenylist: [/^\/api\//],
+    runtimeCaching: [
+      {
+        urlPattern: /^\/api\//,
+        handler: "NetworkOnly",
+      },
+    ],
+  },
+});
 
 interface RequestBody {
   text?: string;
@@ -90,7 +118,7 @@ function asString(value: unknown): string | undefined {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
-    plugins: [react(), tailwindcss(), devApiPlugin(env)],
+    plugins: [react(), tailwindcss(), pwaPlugin, devApiPlugin(env)],
     resolve: {
       alias: {
         "@": path.resolve(process.cwd(), "src"),
