@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LANGUAGES } from "../../../shared/languages";
 
@@ -5,9 +6,10 @@ interface LanguageBarProps {
   lang: string;
   onSelect: (code: string) => void;
   disabledCode: string | null;
+  onReset: () => void;
 }
 
-export function LanguageBar({ lang, onSelect, disabledCode }: LanguageBarProps) {
+export function LanguageBar({ lang, onSelect, disabledCode, onReset }: LanguageBarProps) {
   return (
     <div className="flex items-center justify-center gap-2 border-t border-[#eee] px-3 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
       {LANGUAGES.map(({ code, name, flag }) => {
@@ -32,6 +34,16 @@ export function LanguageBar({ lang, onSelect, disabledCode }: LanguageBarProps) 
           </button>
         );
       })}
+      <span className="mx-1 h-5 w-px bg-[#e2e2e2]" />
+      <button
+        type="button"
+        onClick={onReset}
+        aria-label="Clear chat"
+        title="Clear chat"
+        className="grid size-8 place-content-center rounded-full text-[#999] transition hover:bg-[#f2f2f2] hover:text-[#555]"
+      >
+        <Trash2 className="size-4" />
+      </button>
     </div>
   );
 }

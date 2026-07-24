@@ -61,5 +61,9 @@ export function useChat() {
     }
   }
 
-  return { messages, send, addMeme };
+  function reset(): void {
+    setMessages([GREETING]);
+  }
+
+  return { messages, send, addMeme, reset };
 }

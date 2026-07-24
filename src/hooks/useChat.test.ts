@@ -94,6 +94,21 @@ describe("useChat", () => {
     expect(memeMock).toHaveBeenCalledWith("Bonjour");
   });
 
+  it("resets the conversation back to the greeting", async () => {
+    translationMock.mockResolvedValue("Bonjour");
+    const { result } = renderHook(() => useChat());
+
+    await act(() => result.current.send("Hello", "fr"));
+    expect(result.current.messages.length).toBeGreaterThan(1);
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.messages[0].role).toBe("system");
+  });
+
   it("records a meme error on the message without dropping the translation", async () => {
     translationMock.mockResolvedValue("Bonjour");
     memeMock.mockRejectedValue(new Error("Meme service down."));

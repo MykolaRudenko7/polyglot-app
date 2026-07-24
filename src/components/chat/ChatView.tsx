@@ -10,7 +10,7 @@ import { LANGUAGES } from "../../../shared/languages";
 const DEFAULT_LANG = LANGUAGES[0].code;
 
 export function ChatView() {
-  const { messages, send, addMeme } = useChat();
+  const { messages, send, addMeme, reset } = useChat();
   const [text, setText] = useState("");
   const [lang, setLang] = useState(DEFAULT_LANG);
   const suggestion = useCorrection(text);
@@ -48,7 +48,7 @@ export function ChatView() {
         }}
         onSend={handleSend}
       />
-      <LanguageBar lang={lang} onSelect={setLang} disabledCode={detectedCode} />
+      <LanguageBar lang={lang} onSelect={setLang} disabledCode={detectedCode} onReset={reset} />
     </div>
   );
 }

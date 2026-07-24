@@ -80,6 +80,26 @@ describe("ChatView", () => {
     expect(screen.getByRole("button", { name: "Translate to Ukrainian" })).toBeDisabled();
   });
 
+  it("clears the conversation with the clear button", async () => {
+    const user = userEvent.setup();
+    translationMock.mockResolvedValue("Bonjour");
+    render(<ChatView />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Text to translate" }),
+      "Hello everyone out there"
+    );
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => {
+      expect(screen.getByText("Bonjour")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Clear chat" }));
+
+    expect(screen.queryByText("Bonjour")).not.toBeInTheDocument();
+    expect(screen.getByText(/select a language/i)).toBeInTheDocument();
+  });
+
   it("switches away from a language that becomes the detected input", async () => {
     const user = userEvent.setup();
     translationMock.mockResolvedValue("Hello");
