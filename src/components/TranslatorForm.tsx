@@ -22,15 +22,15 @@ export function TranslatorForm({ loading, onTranslate }: TranslatorFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-      <h2 className="text-center text-xl font-bold text-blue">Text to translate 👇</h2>
+      <h2 className="text-blue text-center text-xl font-bold">Text to translate 👇</h2>
       <Textarea
-        className="min-h-[100px] resize-y rounded-lg border-0 bg-field-bg px-3.5 py-3 text-lg font-semibold text-[#333] shadow-none focus-visible:border-0 focus-visible:ring-2 focus-visible:ring-blue md:text-lg"
+        className="bg-field-bg focus-visible:ring-blue min-h-[100px] resize-y rounded-lg border-0 px-3.5 py-3 text-lg font-semibold text-[#333] shadow-none focus-visible:border-0 focus-visible:ring-2 md:text-lg"
         placeholder="How are you?"
         value={text}
         onChange={(event) => setText(event.target.value)}
       />
 
-      <h2 className="text-center text-xl font-bold text-blue">Select language 👇</h2>
+      <h2 className="text-blue text-center text-xl font-bold">Select language 👇</h2>
       <RadioGroup value={lang} onValueChange={setLang} className="gap-2.5 pl-4">
         {LANGUAGES.map(({ code, name, flag }) => (
           <div key={code} className="flex items-center gap-3">
@@ -49,7 +49,7 @@ export function TranslatorForm({ loading, onTranslate }: TranslatorFormProps) {
       <Button
         type="submit"
         disabled={loading || !text.trim()}
-        className="mt-1 h-[50px] w-full rounded-md bg-blue text-2xl font-bold text-white hover:bg-blue/90"
+        className="bg-blue hover:bg-blue/90 mt-1 h-[50px] w-full rounded-md text-2xl font-bold text-white"
       >
         {loading ? (
           <>
