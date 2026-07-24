@@ -20,33 +20,33 @@ export function ResultView({
 }: ResultViewProps) {
   return (
     <div className="flex flex-col gap-3.5">
-      <h2 className="text-center text-xl font-bold text-blue">Original text 👇</h2>
-      <p className="m-0 min-h-[100px] w-full whitespace-pre-wrap rounded-lg bg-field-bg px-3.5 py-3 text-lg font-semibold text-[#333]">
+      <h2 className="text-blue text-center text-xl font-bold">Original text 👇</h2>
+      <p className="bg-field-bg m-0 min-h-[100px] w-full rounded-lg px-3.5 py-3 text-lg font-semibold whitespace-pre-wrap text-[#333]">
         {originalText}
       </p>
 
-      <h2 className="text-center text-xl font-bold text-blue">Your translation 👇</h2>
+      <h2 className="text-blue text-center text-xl font-bold">Your translation 👇</h2>
 
       {loading && <TranslationSkeleton />}
 
       {!loading && error && (
         <Alert variant="destructive" className="border-destructive/30 bg-destructive/5">
           <AlertCircle />
-          <AlertDescription className="text-base font-semibold text-destructive">
+          <AlertDescription className="text-destructive text-base font-semibold">
             {error}
           </AlertDescription>
         </Alert>
       )}
 
       {!loading && !error && (
-        <p className="m-0 min-h-[100px] w-full animate-fade-in whitespace-pre-wrap rounded-lg bg-field-bg px-3.5 py-3 text-lg font-semibold text-black">
+        <p className="animate-fade-in bg-field-bg m-0 min-h-[100px] w-full rounded-lg px-3.5 py-3 text-lg font-semibold whitespace-pre-wrap text-black">
           {translation}
         </p>
       )}
 
       <Button
         onClick={onStartOver}
-        className="mt-1 h-[50px] w-full rounded-md bg-blue text-2xl font-bold text-white hover:bg-blue/90"
+        className="bg-blue hover:bg-blue/90 mt-1 h-[50px] w-full rounded-md text-2xl font-bold text-white"
       >
         Start Over
       </Button>
@@ -57,13 +57,13 @@ export function ResultView({
 function TranslationSkeleton() {
   return (
     <div
-      className="flex min-h-[100px] flex-col justify-center gap-2.5 rounded-lg bg-field-bg px-3.5 py-3"
+      className="bg-field-bg flex min-h-[100px] flex-col justify-center gap-2.5 rounded-lg px-3.5 py-3"
       role="status"
       aria-label="Translating"
     >
-      <Skeleton className="shimmer-line h-3.5 w-[90%] !animate-shimmer" />
-      <Skeleton className="shimmer-line h-3.5 w-[75%] !animate-shimmer" />
-      <Skeleton className="shimmer-line h-3.5 w-[55%] !animate-shimmer" />
+      <Skeleton className="shimmer-line !animate-shimmer h-3.5 w-[90%]" />
+      <Skeleton className="shimmer-line !animate-shimmer h-3.5 w-[75%]" />
+      <Skeleton className="shimmer-line !animate-shimmer h-3.5 w-[55%]" />
     </div>
   );
 }

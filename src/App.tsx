@@ -24,8 +24,8 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-dvh items-start justify-center bg-page-bg px-4 py-6 sm:py-10">
-      <main className="w-full max-w-[400px] overflow-hidden rounded-2xl border border-card-border bg-white shadow-sm">
+    <div className="bg-page-bg flex min-h-dvh items-start justify-center px-4 py-6 sm:py-10">
+      <main className="border-card-border w-full max-w-[400px] overflow-hidden rounded-2xl border bg-white shadow-sm">
         <Header />
         <div className="px-5 pt-6 pb-8 sm:px-6">
           {screen === "form" ? (
