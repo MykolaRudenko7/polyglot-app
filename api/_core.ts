@@ -1,8 +1,10 @@
 import { LANGUAGE_NAMES } from "../shared/languages.js";
 
-const DEFAULT_MODEL = "openai/gpt-oss-20b:free";
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const REQUEST_TIMEOUT_MS = 20_000;
+const TRANSLATE_MODEL = "google/gemma-4-31b-it:free";
+const CORRECT_MODEL = "google/gemma-4-31b-it:free";
+const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
+const MEME_API = "https://meme-api.com/gimme/6";
+const REQUEST_TIMEOUT_MS = 30_000;
 
 export class HttpError extends Error {
   constructor(
@@ -14,34 +16,40 @@ export class HttpError extends Error {
   }
 }
 
+interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
 interface ChatCompletion {
   choices?: { message?: { content?: string } }[];
 }
 
-export async function translate(
-  text: string | undefined,
-  targetLang: string | undefined
-): Promise<string> {
-  const trimmed = typeof text === "string" ? text.trim() : "";
-  if (!trimmed) {
-    throw new HttpError(400, "Please enter some text to translate.");
-  }
+interface MemeApiResponse {
+  memes?: MemeApiItem[];
+  url?: string;
+  nsfw?: boolean;
+  spoiler?: boolean;
+}
 
-  const languageName = targetLang ? LANGUAGE_NAMES[targetLang] : undefined;
-  if (!languageName) {
-    throw new HttpError(400, "Unsupported target language.");
-  }
+interface MemeApiItem {
+  url?: string;
+  nsfw?: boolean;
+  spoiler?: boolean;
+}
 
+function requireApiKey(): string {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new HttpError(500, "Server is missing OPENROUTER_API_KEY.");
-  }
+  if (!apiKey) throw new HttpError(500, "Server is missing OPENROUTER_API_KEY.");
+  return apiKey;
+}
 
-  const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+async function callOpenRouter(body: Record<string, unknown>): Promise<ChatCompletion> {
+  const apiKey = requireApiKey();
 
   let response: Response;
   try {
-    response = await fetch(OPENROUTER_URL, {
+    response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
       method: "POST",
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       headers: {
@@ -50,28 +58,10 @@ export async function translate(
         "HTTP-Referer": "https://polyglot-app.local",
         "X-Title": "PollyGlot",
       },
-      body: JSON.stringify({
-        model,
-        temperature: 0.2,
-        max_tokens: 500,
-        messages: [
-          {
-            role: "system",
-            content:
-              `You are a professional translator. Translate the user's text into ${languageName}. ` +
-              "Return ONLY the translated text - no explanations, no quotes, no notes. " +
-              "Preserve the tone and meaning of the original.",
-          },
-          { role: "user", content: trimmed },
-        ],
-      }),
+      body: JSON.stringify(body),
     });
   } catch (err) {
-    const name = err instanceof Error ? err.name : "";
-    if (name === "TimeoutError" || name === "AbortError") {
-      throw new HttpError(504, "The translation service timed out. Please try again.");
-    }
-    throw new HttpError(502, "Could not reach the translation service. Check your connection.");
+    throw timeoutOrNetworkError(err, "AI service");
   }
 
   if (!response.ok) {
@@ -80,18 +70,102 @@ export async function translate(
       throw new HttpError(429, "Rate limit reached (free tier: 50 requests/day). Try again later.");
     }
     if (response.status === 401) {
-      throw new HttpError(502, "The translation service rejected the API key.");
+      throw new HttpError(502, "The AI service rejected the API key.");
     }
-    throw new HttpError(502, "The translation service returned an error. Please try again.");
+    throw new HttpError(502, "The AI service returned an error. Please try again.");
   }
 
-  const data = (await response.json()) as ChatCompletion;
+  return (await response.json()) as ChatCompletion;
+}
+
+export async function translate(
+  text: string | undefined,
+  targetLang: string | undefined
+): Promise<string> {
+  const trimmed = typeof text === "string" ? text.trim() : "";
+  if (!trimmed) throw new HttpError(400, "Please enter some text to translate.");
+
+  const languageName = targetLang ? LANGUAGE_NAMES[targetLang] : undefined;
+  if (!languageName) throw new HttpError(400, "Unsupported target language.");
+
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content:
+        `You are a professional translator. Translate the user's text into ${languageName}. ` +
+        "Return ONLY the translated text - no explanations, no quotes, no notes. " +
+        "Preserve the tone and meaning of the original.",
+    },
+    { role: "user", content: trimmed },
+  ];
+
+  const data = await callOpenRouter({
+    model: TRANSLATE_MODEL,
+    temperature: 0.2,
+    max_tokens: 500,
+    messages,
+  });
+
   const translation = data.choices?.[0]?.message?.content?.trim();
-  if (!translation) {
-    throw new HttpError(502, "The translation service returned an empty response.");
+  if (!translation) throw new HttpError(502, "The translation service returned an empty response.");
+  return translation;
+}
+
+export async function correct(text: string | undefined): Promise<string> {
+  const trimmed = typeof text === "string" ? text.trim() : "";
+  if (!trimmed) return "";
+
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content:
+        "You are a spelling and grammar corrector. Fix spelling and grammar mistakes in the " +
+        "user's text while keeping the SAME language and meaning. Return ONLY the corrected " +
+        "text - no quotes, no explanations. If the text is already correct, return it unchanged.",
+    },
+    { role: "user", content: trimmed },
+  ];
+
+  const data = await callOpenRouter({
+    model: CORRECT_MODEL,
+    temperature: 0,
+    max_tokens: 300,
+    messages,
+  });
+
+  return data.choices?.[0]?.message?.content?.trim() ?? trimmed;
+}
+
+export async function fetchMeme(): Promise<string> {
+  let response: Response;
+  try {
+    response = await fetch(MEME_API, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  } catch (err) {
+    throw timeoutOrNetworkError(err, "meme service");
   }
 
-  return translation;
+  if (!response.ok) {
+    throw new HttpError(502, "The meme service returned an error. Please try again.");
+  }
+
+  const data = (await response.json()) as MemeApiResponse;
+  const candidates: MemeApiItem[] = data.memes ?? [
+    { url: data.url, nsfw: data.nsfw, spoiler: data.spoiler },
+  ];
+
+  const safe = candidates.find(
+    (meme) => meme.url && !meme.nsfw && !meme.spoiler && /\.(jpe?g|png|gif|webp)$/i.test(meme.url)
+  );
+  if (!safe?.url) throw new HttpError(502, "Could not find a suitable meme. Please try again.");
+  return safe.url;
+}
+
+function timeoutOrNetworkError(err: unknown, service: string): HttpError {
+  const name = err instanceof Error ? err.name : "";
+  if (name === "TimeoutError" || name === "AbortError") {
+    return new HttpError(504, `The ${service} timed out. Please try again.`);
+  }
+  return new HttpError(502, `Could not reach the ${service}. Check your connection.`);
 }
 
 async function safeReadBody(response: Response): Promise<string> {

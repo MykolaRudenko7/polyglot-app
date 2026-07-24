@@ -1,12 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { translate } from "./_core.js";
+import { correct } from "./_core.js";
 import { handlePost } from "./_http.js";
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   return handlePost(req, res, async (body) => ({
-    translation: await translate(
-      body.text as string | undefined,
-      body.targetLang as string | undefined
-    ),
+    corrected: await correct(body.text as string | undefined),
   }));
 }
