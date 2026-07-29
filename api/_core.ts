@@ -5,7 +5,9 @@ const FREE_MODELS = [
   "google/gemma-4-26b-a4b-it:free",
   "nvidia/nemotron-3-super-120b-a12b:free",
 ];
-const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
+// Overridable so local development can point at any OpenAI-compatible server
+// (e.g. Ollama on http://localhost:11434/v1) without spending the daily quota.
+const OPENROUTER_BASE = process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
 const MEME_API = "https://meme-api.com/gimme/6";
 const REQUEST_TIMEOUT_MS = 30_000;
 

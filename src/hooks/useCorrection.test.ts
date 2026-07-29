@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useCorrection } from "./useCorrection";
+import { resetCorrectionCache, useCorrection } from "./useCorrection";
 import { requestCorrection } from "@/api/apiClient";
 
 vi.mock("@/api/apiClient", () => ({
@@ -12,6 +12,7 @@ const correctionMock = vi.mocked(requestCorrection);
 beforeEach(() => {
   vi.useFakeTimers();
   correctionMock.mockReset();
+  resetCorrectionCache();
 });
 
 afterEach(() => {
@@ -86,5 +87,53 @@ describe("useCorrection", () => {
     await flushDebounce();
 
     expect(result.current).toBeNull();
+  });
+
+  it("reuses a cached verdict instead of spending a second request", async () => {
+    correctionMock.mockResolvedValue("Corrected text.");
+    const { result, rerender } = renderHook(({ text }) => useCorrection(text), {
+      initialProps: { text: "corrcted text" },
+    });
+
+    await flushDebounce();
+    expect(result.current).toBe("Corrected text.");
+
+    // Typing something else, then coming back to the exact same input.
+    rerender({ text: "unrelated words" });
+    rerender({ text: "corrcted text" });
+    await flushDebounce();
+
+    expect(correctionMock).toHaveBeenCalledTimes(1);
+    expect(result.current).toBe("Corrected text.");
+  });
+
+  it("answers from cache without waiting for the debounce", async () => {
+    correctionMock.mockResolvedValue("Fixed now.");
+    const { rerender } = renderHook(({ text }) => useCorrection(text), {
+      initialProps: { text: "fixd now" },
+    });
+    await flushDebounce();
+
+    const { result } = renderHook(() => useCorrection("fixd now"));
+
+    expect(result.current).toBe("Fixed now.");
+    expect(correctionMock).toHaveBeenCalledTimes(1);
+    rerender({ text: "fixd now" });
+  });
+
+  it("does not cache failures, so a later attempt can still succeed", async () => {
+    correctionMock.mockRejectedValueOnce(new Error("offline"));
+    const { result, rerender } = renderHook(({ text }) => useCorrection(text), {
+      initialProps: { text: "flaky sentense" },
+    });
+    await flushDebounce();
+    expect(result.current).toBeNull();
+
+    correctionMock.mockResolvedValue("Flaky sentence.");
+    rerender({ text: "other text here" });
+    rerender({ text: "flaky sentense" });
+    await flushDebounce();
+
+    expect(result.current).toBe("Flaky sentence.");
   });
 });
